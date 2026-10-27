@@ -23,6 +23,7 @@
                 // menu utilisateur authentifié
                 echo('<a href="index.php">Accueil</a>');
                 echo('<a href="ajout-jeu.php">Ajouter un jeu</a>');
+                echo('<a href="mon-compte.php">Mon compte</a>'); // BONUS 1
                 echo('<a href="deconnexion.php">Se déconnecter</a>');
 
             }

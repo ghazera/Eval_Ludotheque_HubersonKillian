@@ -25,8 +25,8 @@ if(isset($_POST['submit'])){
         $message = "Frmat de l'email incorrect";
     }
 
-    // on vérifie si le mot de passe à bien + de 12 caracteres
-    elseif(strlen($password) < 12){
+    // on vérifie si le mot de passe à bien 12 caracteres ou +, strlen permet de compter le nombre de caractère ici on strlen($password) donc on compte le nombre de caractere que contient le mdp
+    elseif(strlen($password) < 12){  
         $message = "Le mot de passe doit contenir au moins 12 caractères";
     }
 
@@ -94,13 +94,16 @@ if(isset($_POST['submit'])){
     <form action="" method="post">
 
         <label for="prenom">Prénom :</label>
-        <input type="text" id="prenom" name="prenom">
-        
+        <input type="text" id="prenom" name="prenom"
+        value="<?php echo(htmlspecialchars($_POST['prenom'] ?? "", ENT_QUOTES, 'UTF-8')); ?>">
+
         <label for="nom">Nom :</label>
-        <input type="text" id="nom" name="nom">
+        <input type="text" id="nom" name="nom"
+        value="<?php echo(htmlspecialchars($_POST['nom'] ?? "", ENT_QUOTES, 'UTF-8')); ?>">
 
         <label for="email">Email :</label>
-        <input type="email" id="email" name="email">
+        <input type="email" id="email" name="email"
+        value="<?php echo(htmlspecialchars($_POST['email'] ?? "", ENT_QUOTES, 'UTF-8')); ?>">
 
         <label for="password">Mot de passe :</label>
         <input type="password" id="password" name="password">

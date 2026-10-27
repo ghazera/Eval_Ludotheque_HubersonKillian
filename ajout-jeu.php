@@ -33,23 +33,37 @@ try{
 
     $categories = $request->fetchAll(PDO::FETCH_ASSOC);
 
+
     foreach($categories as $categorie){
 
         $id = (int)$categorie['id_categorie'];
 
-        $nom = htmlspecialchars(
+        $nom = htmlspecialchars( // cette fonoction  permet de normaliser différents caracteres spéciaux en entités html
+        // , dans le but d'éviter des injections src : https://www.php.net/manual/fr/function.htmlspecialchars.php
+        // la normalisation permet d'afficher les caracterse comme du texte et non comme du code qui pourrait être exécuté à des fins malveillante
             $categorie['nom_categorie'],
-            ENT_QUOTES,
+            ENT_QUOTES, // J'utilise ENT_QUOTES pour normaliser les quotes " ' pour qu'elles soient en TEXTE BRUT et éviter des injection, 
+            // c'est une option de htmlspecialchars src : https://www.php.net/manual/fr/function.htmlentities.php
             'UTF-8'
         );
 
-        $options = $options."<option value='{$id}'>{$nom}</option>";
+        // BONUS 2 : conserver la catégorie sélectionnée
+        $selected = "";
+
+        if(isset($_POST['id_categorie']) && $_POST['id_categorie'] == $id){
+            $selected = "selected";
+        }
+
+        $options = $options."<option value='{$id}' {$selected}>{$nom}</option>";
     }
+
 
     // ici je verif que je recois bien le formulaire lorsqu'on appuie sur submit 
     if(isset($_POST['submit'])){
 
-        // récupération des données & les normaliser on utilise trim pour retirer les espaces & autres caracteres en début & fin de chaine
+        // récupération des données & les normaliser on utilise trim pour retirer les espaces & autres caracteres en début & fin de chaine, l'opérateur ?? sert à utiliser la valeur par défaut, en bas j'ai
+        // choisis "" donc vide ( null ), on aurait pu aussi utiliser la notion vu en cours isset mais l'utilisation des ?? ( coalescence nulle ) est plus rapide pour un même résultat
+        // src : https://www.php.net/manual/fr/migration70.new-features.php
         $titre = trim($_POST['titre'] ?? "");
         $joueurs_min = trim($_POST['joueurs_min'] ?? "");
         $joueurs_max = trim($_POST['joueurs_max'] ?? "");
@@ -107,27 +121,48 @@ try{
 
             $request->execute();
 
+            
             $data = $request->fetchAll(PDO::FETCH_ASSOC);
 
+            // BONUS 3 : on vérifie que la catégorie existe bien dans notre BDD
+            $id_categorie = (int)$id_categorie;
+
+            $request = $pdo->prepare(
+                "SELECT id_categorie FROM Categorie WHERE id_categorie = ?;"
+            );
+
+            $request->bindParam(1, $id_categorie, PDO::PARAM_INT);
+
+            $request->execute();
+
+            $categorieExiste = $request->fetchAll(PDO::FETCH_ASSOC);
+
+            // on vérifie d'abord si le titre existe déjà
             if(count($data) > 0){
                 $message = "Un jeu existe déjà avec ce même titre";
             }
+
+            // si aucun résultat n'est trouvé, la catégorie n'existe pas
+            elseif(count($categorieExiste) == 0){
+                $message = "Cette catégorie n'existe pas dans la BDD";
+            }
+
             else{
                 // on convertis les valeurs en nombre entier
                 $joueurs_min = (int)$joueurs_min;
                 $joueurs_max = (int)$joueurs_max;
                 $duree = (int)$duree;
-                $id_categorie = (int)$id_categorie;
 
-                // on recupere l'id du membre directement inscrit dans les données de sa session en cours 
+                // on recupere l'id du membre directement inscrit dans les données de sa session en cours
                 $id_membre = (int)$_SESSION['id_membre'];
+
                 $request = $pdo->prepare(
                     "INSERT INTO Jeu
                     (titre, joueurs_min, joueurs_max, duree, id_membre, id_categorie)
                     VALUES (?, ?, ?, ?, ?, ?);"
                 );
 
-                // on lie les variables aux bons emplacement de nos values ?,? 
+                // on lie les variables aux bons emplacement de nos values
                 $request->bindParam(1, $titre, PDO::PARAM_STR);
                 $request->bindParam(2, $joueurs_min, PDO::PARAM_INT);
                 $request->bindParam(3, $joueurs_max, PDO::PARAM_INT);
@@ -137,8 +172,9 @@ try{
 
                 $request->execute();
 
-                $message = "Le jeu a été ajouté à la bd avec succes";
+                $message = "Le jeu a été ajouté à la BDD avec succès";
             }
+
         }
     }
 
@@ -156,16 +192,20 @@ try{
     <form action="" method="post">
 
         <label for="titre">Titre du jeu :</label>
-        <input type="text" id="titre" name="titre">
+        <input type="text" id="titre" name="titre"
+        value="<?php echo(htmlspecialchars($_POST['titre'] ?? "", ENT_QUOTES, 'UTF-8')); ?>">
 
         <label for="joueurs_min">Nombre minimum de joueurs :</label>
-        <input type="number" id="joueurs_min" name="joueurs_min">
+        <input type="number" id="joueurs_min" name="joueurs_min"
+        value="<?php echo(htmlspecialchars($_POST['joueurs_min'] ?? "", ENT_QUOTES, 'UTF-8')); ?>">
 
         <label for="joueurs_max">Nombre maximum de joueurs :</label>
-        <input type="number" id="joueurs_max" name="joueurs_max">
+        <input type="number" id="joueurs_max" name="joueurs_max"
+        value="<?php echo(htmlspecialchars($_POST['joueurs_max'] ?? "", ENT_QUOTES, 'UTF-8')); ?>">
 
         <label for="duree">Durée de la partie (minutes) :</label>
-        <input type="number" id="duree" name="duree">
+        <input type="number" id="duree" name="duree"
+        value="<?php echo(htmlspecialchars($_POST['duree'] ?? "", ENT_QUOTES, 'UTF-8')); ?>">
 
         <label for="id_categorie">Catégorie :</label>
         <select id="id_categorie" name="id_categorie">
