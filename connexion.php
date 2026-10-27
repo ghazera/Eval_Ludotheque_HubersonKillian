@@ -30,7 +30,7 @@ if(isset($_POST['submit'])){
             // on recupere le membre et son mail
             $request = $pdo->prepare("SELECT * FROM Membre WHERE email = ?;");
 
-            $request->bindParam(1, $email, PDO::PARAM_STR);
+            $request->bindParam(1, $email, PDO::PARAM_STR); // on récupere le premier parametre, 1, donc là où se trouve le premier ? de la requete sql
 
             $request->execute();
 
@@ -42,7 +42,10 @@ if(isset($_POST['submit'])){
                 if(password_verify($password, $data[0]['mot_de_passe'])){ // comparer le mot de passe saisi au hash enregistré en base de donné
 
                     // on renouvele la session php
-                    session_regenerate_id(true);
+                    session_regenerate_id(true); // ca nous permet en gros de regénerer l'identifiant de la session, c'est pas quelque chose d'obligatoire mais c'est une bonne pratique pour éviter
+                    // la fixation de session : c'est à dire conserver le même identifiant de session avant et après la connexion, alors qu'un hacker pourrait déjà connaître cet identifiant( c'est une exploit connu en cyber sécurité ), 
+                    // ça évite à un hacker de une fois en possession de ce token, de pouvoir s'y reconnecter sans probleme
+                    // vu que la session gardera le même token, alors que là, on le regenère : source https://www.php.net/manual/fr/function.session-regenerate-id.php
 
                     //on enregistre les données dans la session 
                     $_SESSION['id_membre'] = $data[0]['id_membre'];
